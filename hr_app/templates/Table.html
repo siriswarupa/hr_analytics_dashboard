@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>jobrole vs environmentsatisfaction based on gender</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.0.2/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    {% block content %}
+    <div>
+      <br /><br />
+      <label for="environmentsatisfaction-filter"
+        >environmentsatisfaction
+      </label>
+      <!--<input type="number" id="environmentsatisfaction-filter" limit 5 />-->
+      <select id="environmentsatisfaction-filter">
+        <option value="">All</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+      </select>
+    </div>
+
+    <div>
+      <br /><br />
+      <label for="jobrole-filter">JobRole</label>
+      <select id="jobrole-filter">
+        <option value="">All</option>
+        <option value="Healthcare Representative">
+          Healthcare Representative
+        </option>
+        <option value="Human Resources">Human Resources</option>
+        <option value="Laboratory Technician">Laboratory Technician</option>
+        <option value="Manager">Manager</option>
+        <option value="Manufacturing Director">Manufacturing Director</option>
+        <option value="Research Director">Research Director</option>
+        <option value="Research Scientist">Research Scientist</option>
+        <option value="Sales Executive">Sales Executive</option>
+        <option value="Sales Representative">Sales Representative</option>
+      </select>
+    </div>
+    <div width="100%" height="100" class="col-md-8">
+      <canvas id="myChart" width="200" height="100"></canvas>
+
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      <script>
+        var groupedData = {};
+        {% for hrEmployeeAttrition in hrEmployeeAttrition %}
+        var gender = '{{ hrEmployeeAttrition.gender }}';
+
+        var  environmentsatisfaction = '{{ hrEmployeeAttrition.environmentsatisfaction }}';
+        var jobrole = '{{ hrEmployeeAttrition.jobrole }}';
+        if (!(gender in groupedData)) {
+          groupedData[gender] = [];
+        }
+        groupedData[gender].push({ environmentsatisfaction: environmentsatisfaction , jobrole: jobrole });
+        {% endfor %}
+
+        // Extract labels and dataset values from groupedData
+        var labels = Object.keys(groupedData);
+        var dataset = Object.values(groupedData).map((data) => data.length);
+
+        // Get references to the filter elements
+        const environmentsatisfactionFilter = document.getElementById("environmentsatisfaction-filter");
+        const jobroleFilter = document.getElementById("jobrole-filter");
+
+        // Create a function to apply filters and update the chart
+        function applyFilters() {
+          const selectedenvironmentsatisfaction = environmentsatisfactionFilter.value;
+          const selectedjobrole = jobroleFilter.value;
+
+          const filteredLabels = [];
+          const filteredDataset = [];
+
+          labels.forEach((label, index) => {
+            const data = groupedData[label];
+            const filteredData = data.filter(
+              (item) =>
+                (selectedenvironmentsatisfaction === "" || item.environmentsatisfaction === selectedenvironmentsatisfaction) &&
+                (selectedjobrole === "" || item.jobrole === selectedjobrole)
+            );
+            filteredLabels.push(label);
+            filteredDataset.push(filteredData.length);
+          });
+
+          updateChart(filteredLabels, filteredDataset);
+        }
+
+        // Create the initial chart
+        var ctx = document.getElementById("myChart").getContext("2d");
+        var myChart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Number of Employees",
+                data: dataset,
+                 backgroundColor: [
+                  "rgba(54, 162, 235, 0.5)",
+                  "rgba(255, 99, 132, 0.5)",
+                  "rgba(75, 192, 192, 0.5)",
+
+                  // Add more colors here
+                ],
+                borderColor: [
+                  "rgba(54, 162, 235, 1)",
+                  "rgba(255, 99, 132, 1)",
+                  "rgba(75, 192, 192, 1)",
+                  // Add more colors here
+                ],
+                //backgroundColor: "rgba(54, 162, 235, 0.5)",
+                //borderColor: "rgba(54, 162, 235, 1)",
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        });
+
+        // Update the chart data and labels
+        function updateChart(labels, dataset) {
+          myChart.data.labels = labels;
+          myChart.data.datasets[0].data = dataset;
+          myChart.update();
+        }
+
+        // Add event listeners to the filters
+        environmentsatisfactionFilter.addEventListener("change", applyFilters);
+        jobroleFilter.addEventListener("change", applyFilters);
+      </script>
+    </div>
+
+    {% endblock %}
+  </body>
+</html>

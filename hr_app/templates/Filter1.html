@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>filter1</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.0.2/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    {% block content %}
+
+    <div>
+      <br /><br />
+      <label for="age-filter">Age:</label>
+      <input type="number" id="age-filter" />
+    </div>
+    <div>
+      <br /><br />
+      <label for="gender-filter">Gender:</label>
+      <select id="gender-filter">
+        <option value="">All</option>
+        <option value="Female">Female</option>
+        <option value="Male">Male</option>
+      </select>
+    </div>
+    <div width="100%" height="100" class="col-md-8">
+      <canvas id="myChart" width="200" height="100"></canvas>
+
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      <script>
+        var groupedData = {};
+        {% for hrEmployeeAttrition in hrEmployeeAttrition %}
+        var department = '{{ hrEmployeeAttrition.department }}';
+        var age = {{ hrEmployeeAttrition.age }};
+        var gender = '{{ hrEmployeeAttrition.gender }}';
+        if (!(department in groupedData)) {
+          groupedData[department] = [];
+        }
+        groupedData[department].push({ age: age, gender: gender });
+        {% endfor %}
+
+        // Extract labels and dataset values from groupedData
+        var labels = Object.keys(groupedData);
+        var dataset = Object.values(groupedData).map((data) => data.length);
+
+        // Get references to the filter elements
+        const ageFilter = document.getElementById("age-filter");
+        const genderFilter = document.getElementById("gender-filter");
+
+        // Create a function to apply filters and update the chart
+        function applyFilters() {
+          const selectedAge = parseInt(ageFilter.value);
+          const selectedGender = genderFilter.value;
+
+          const filteredLabels = [];
+          const filteredDataset = [];
+
+          labels.forEach((label, index) => {
+            const data = groupedData[label];
+            const filteredData = data.filter(
+              (item) =>
+                (selectedAge === "" || item.age === selectedAge) &&
+                (selectedGender === "" || item.gender === selectedGender)
+            );
+            filteredLabels.push(label);
+            filteredDataset.push(filteredData.length);
+          });
+
+          updateChart(filteredLabels, filteredDataset);
+        }
+
+        // Create the initial chart
+        var ctx = document.getElementById("myChart").getContext("2d");
+        var myChart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Number of Employees",
+                data: dataset,
+                backgroundColor: [
+                  "rgba(54, 162, 235, 0.5)",
+                  "rgba(255, 99, 132, 0.5)",
+                  "rgba(75, 192, 192, 0.5)",
+
+                  // Add more colors here
+                   // Add more colors here
+                   ],
+                borderColor: [
+                  "rgba(54, 162, 235, 1)",
+                  "rgba(255, 99, 132, 1)",
+                  "rgba(75, 192, 192, 1)",
+                  // Add more colors here
+                ],
+                borderWidth: 2,
+              },
+            ],
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        });
+
+        // Update the chart data and labels
+        function updateChart(labels, dataset) {
+          myChart.data.labels = labels;
+          myChart.data.datasets[0].data = dataset;
+          myChart.update();
+        }
+
+        // Add event listeners to the filters
+        ageFilter.addEventListener("input", applyFilters);
+        genderFilter.addEventListener("change", applyFilters);
+      </script>
+    </div>
+
+    {% endblock %}
+  </body>
+</html>
